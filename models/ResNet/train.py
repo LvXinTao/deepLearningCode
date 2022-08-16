@@ -6,8 +6,8 @@ import warnings
 warnings.filterwarnings('ignore')
 
 from data.data_entry import fetch_train_loader,fetch_eval_loader,get_num_features_by_type
-from models.GoogLeNet_v1.model import GoogLeNet_v1
-from models.GoogLeNet_v1.options import get_train_args
+from models.ResNet.model import resnet50
+from models.ResNet.options import get_train_args
 from utils.logger import set_logger
 from utils.config import set_seed
 from utils.summary import Summary
@@ -18,7 +18,6 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 import numpy as np
-
 
 class Trainer:
     def __init__(self):
@@ -36,9 +35,9 @@ class Trainer:
         self.train_loader=fetch_train_loader(self.args)
         self.val_loader=fetch_eval_loader(self.args)
         # 设置model
-        self.model=GoogLeNet_v1(get_num_features_by_type(self.args),
-                                aux_logits=True,
-                                init_weights=True)
+        self.model=resnet50(get_num_features_by_type(self.args),
+                            include_top=True,
+                            init_weights=True)
         self.model.to(self.device)
         # 设置optimizer
         self.optimizer=torch.optim.SGD(self.model.parameters(),self.args.lr,
@@ -63,15 +62,15 @@ class Trainer:
 
 
     def train_per_epoch(self,epoch):
-        self.model.train()
+        self.model.train()        
         correct=0.0
         total=0.0
         with tqdm(total=len(self.train_loader)) as t:
             for i,(train_batch,labels_batch) in enumerate(self.train_loader):
                 train_batch,labels_batch=train_batch.to(self.device),labels_batch.to(self.device)
-                output,aux_out2,aux_out1=self.model(train_batch)
+                output=self.model(train_batch)
 
-                loss=self.compute_loss(output,aux_out2,aux_out1,labels_batch)
+                loss=self.compute_loss(output,labels_batch)
                 self.summary.record_scalar('loss',loss.item())
 
                 pred=output.argmax(axis=1)
@@ -93,17 +92,10 @@ class Trainer:
     def val_per_epoch(self,epoch):
         pass
 
-    def compute_loss(self,output,aux_out2,aux_out1,labels_batch):
-        loss_1=self.loss_fn(output,labels_batch)
-        loss_2=self.loss_fn(aux_out2,labels_batch)
-        loss_3=self.loss_fn(aux_out1,labels_batch)
-        loss=loss_1+0.3*loss_2+0.3*loss_3
+    def compute_loss(self,output,labels_batch):
+        loss=self.loss_fn(output,labels_batch)
         return loss
     
-    def compute_accuracy(self,output,labels):
-        output=np.argmax(output.detach().cpu().numpy(),axis=1)
-        return np.sum(output==labels)/float(labels.size()[0])
-
     def save_checkpoint(self,epoch):
         checkpoint={
             'model':self.model.state_dict(),
@@ -111,7 +103,7 @@ class Trainer:
             'scheduler':self.scheduler.state_dict() if self.scheduler else None,
             'epoch':epoch
         }
-        torch.save(checkpoint,os.path.join(self.args.save_model_dir,'GoogLeNet_v1_epoch_{}.pth.tar'.format(epoch)))
+        torch.save(checkpoint,os.path.join(self.args.save_model_dir,'ResNet50_epoch_{}.pth.tar'.format(epoch)))
         logging.info('----Checkpoint saved at epoch {}----'.format(epoch))
 
     
