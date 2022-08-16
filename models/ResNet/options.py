@@ -25,7 +25,7 @@ def parse_train_args(parser):
                         help="Momentum for SGD,alpha parameter for Adam")
     parser.add_argument('--weight_decay','--wd',type=float,default=1e-4,
                         help='Weight decay')
-    parser.add_argument('--batch_size',type=int,default=128,
+    parser.add_argument('--batch_size',type=int,default=64,
                         help='Batch Size')
     parser.add_argument('--epochs',type=int,default=100,
                         help='Epochs to train the model')
