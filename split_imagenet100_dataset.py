@@ -29,6 +29,7 @@ if __name__=='__main__':
     # 分割出train,val,test
     for dir in os.listdir(args.data_dir):
         files=os.listdir(os.path.join(args.data_dir,dir))
+        random.shuffle(files) # 随机打乱
         train_num=len(files)*args.train_PCT
         val_num=len(files)*args.val_PCT
         for i,file in enumerate(files):
