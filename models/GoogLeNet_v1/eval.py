@@ -45,7 +45,8 @@ class Evaluator:
     def eval(self):
         logging.info('----Start testing!----')
         self.model.eval()
-        correct=0.0
+        top1_correct=0.
+        top5_correct=0.
         total=len(self.test_loader)
         with torch.no_grad():
             with tqdm(total=total) as t:
@@ -53,13 +54,22 @@ class Evaluator:
                     test_batch,labels_batch=test_batch.to(self.device),labels_batch.to(self.device)
                     output=self.model(test_batch)
                     
-                    output=output.detach_().cpu().numpy()
-                    labels_batch=labels_batch.detach_().cpu().numpy()
-                    correct+=np.sum(np.argmax(output,axis=1)==labels_batch)
+                    output=output.detach_().cpu()
+                    labels_batch=labels_batch.detach_().cpu()
+                    top1_correct+=self.compute_top1(output,labels_batch)
+                    top5_correct+=self.compute_top5(output,labels_batch)
                     t.update()
-        accuracy=correct/float(total)
-        logging.info('----Accuracy:{}/{}={}%----'.format(correct,total,accuracy*100))
+        top1_accuracy=top1_correct/float(total)
+        top5_accuracy=top5_correct/float(total)
+        logging.info('----Top1 Accuracy:{}/{}={}%----'.format(top1_correct,total,top1_accuracy*100))
+        logging.info('----Top5 Accuracy:{}/{}={}%----'.format(top5_correct,total,top5_accuracy*100))
 
+    def compute_top1(self,output,labels):
+        return torch.eq(torch.argmax(output,dim=1),labels).sum().float().item()
+    
+    def compute_top5(self,output,labels):
+        _,pred=output.topk(k=5,dim=1,largest=True,sorted=True)
+        return torch.eq(pred,labels).sum().float().item()
 
 if __name__=='__main__':
     evaluator=Evaluator()
