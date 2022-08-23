@@ -6,7 +6,7 @@ warnings.filterwarnings('ignore')
 
 from data.data_entry import fetch_eval_loader,get_num_features_by_type
 from models.MobileNet_v2.model import MobileNetV2
-from models.Mobilenet_v2.options import get_test_args
+from models.MobileNet_v2.options import get_test_args
 from utils.logger import set_logger
 from utils.config import set_seed
 from utils.summary import Summary
@@ -31,13 +31,13 @@ class Evaluator:
         self.test_loader=fetch_eval_loader(self.args)
 
         self.model=MobileNetV2(get_num_features_by_type(self.args))
-        if self.args.load_model_path=='':
+        if self.args.load_checkpoint_path=='':
             raise Exception("No model loaded!")
         elif not os.path.exists(self.args.load_checkpoint_path):
             raise Exception("No model found at {}".foramt(self.args.load_checkpoint_path))
-        checkpoint=torch.load(self.args.load_model_path,map_location=self.device)
+        checkpoint=torch.load(self.args.load_checkpoint_path,map_location=self.device)
         self.model.load_state_dict(checkpoint['model']) 
-        logging.info('----Model {} loaded!----'.format(self.args.load_model_path))
+        logging.info('----Model {} loaded!----'.format(self.args.load_checkpoint_path))
         self.model.to(self.device)
 
     def eval(self):

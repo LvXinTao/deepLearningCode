@@ -1,0 +1,1 @@
+python /root/deepLearningCode/models/MobileNet_v2/eval.py --load_checkpoint_path=./checkpoints/MobileNet_v2/MobileNet_v2_epoch_20.pth.tar --val_list=/root/autodl-tmp/imagenet100/test_list.txt
